@@ -471,19 +471,31 @@
   .float-toolbar::after {
     content: "";
     position: absolute;
-    top: 50%;
-    margin-top: -7px;
     width: 0; height: 0;
-    border-top: 7px solid transparent;
-    border-bottom: 7px solid transparent;
   }
   .float-toolbar.right::after {  /* toolbar sits right of text → arrow points left */
-    left: -7px;
+    top: 50%; margin-top: -7px; left: -7px;
+    border-top: 7px solid transparent;
+    border-bottom: 7px solid transparent;
     border-right: 7px solid #2a2a2e;
   }
   .float-toolbar.left::after {   /* toolbar sits left of text → arrow points right */
-    right: -7px;
+    top: 50%; margin-top: -7px; right: -7px;
+    border-top: 7px solid transparent;
+    border-bottom: 7px solid transparent;
     border-left: 7px solid #2a2a2e;
+  }
+  .float-toolbar.below::after {  /* toolbar sits below text → arrow points up */
+    left: 50%; margin-left: -7px; top: -7px;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-bottom: 7px solid #2a2a2e;
+  }
+  .float-toolbar.above::after {  /* toolbar sits above text → arrow points down */
+    left: 50%; margin-left: -7px; bottom: -7px;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 7px solid #2a2a2e;
   }
   .float-toolbar .label { font-size: 11px; color: #86868b; }
   .float-divider { width: 1px; height: 22px; background: #3a3a3e; margin: 0 4px; }
@@ -563,12 +575,11 @@
     }
     .btn { padding: 10px 14px; font-size: 13px; }
 
-    /* Floating toolbar: dock to top of viewport, no side arrow */
+    /* Floating toolbar — anchors below (or above) the text */
     .float-toolbar {
       padding: 8px 10px;
       gap: 6px;
     }
-    .float-toolbar::after { display: none; }
 
     /* Larger touch targets for image-chrome handles */
     .image-chrome .handle { width: 22px; height: 22px; }
@@ -1393,34 +1404,42 @@
     if (sel) sel.removeAllRanges();
   }
 
-  // Floating toolbar positioning — right of the text (falls back to left).
-  // On narrow viewports it docks to the top-center, out of the way of the keyboard.
+  // Floating toolbar positioning. Desktop: right of text (falls back to left).
+  // Mobile: below the text (falls back to above if there's no room below).
   function positionFloatToolbar(textEl) {
     floatToolbar.classList.remove('hidden');
     const tb = floatToolbar.getBoundingClientRect();
-    const isMobile = window.matchMedia('(max-width: 768px)').matches;
-    if (isMobile) {
-      floatToolbar.classList.remove('right', 'left');
-      floatToolbar.style.top = '10px';
-      floatToolbar.style.left = ((window.innerWidth - tb.width) / 2) + 'px';
-      return;
-    }
     const rect = textEl.getBoundingClientRect();
     const GAP = 14;
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    floatToolbar.classList.remove('right', 'left', 'below', 'above');
+
+    if (isMobile) {
+      let top, placement;
+      if (rect.bottom + GAP + tb.height <= window.innerHeight - 8) {
+        top = rect.bottom + GAP; placement = 'below';
+      } else {
+        top = Math.max(8, rect.top - tb.height - GAP); placement = 'above';
+      }
+      let left = rect.left + (rect.width - tb.width) / 2;
+      left = Math.max(8, Math.min(window.innerWidth - tb.width - 8, left));
+      floatToolbar.style.top = top + 'px';
+      floatToolbar.style.left = left + 'px';
+      floatToolbar.classList.add(placement);
+      return;
+    }
+
     let left, placement;
     if (rect.right + GAP + tb.width <= window.innerWidth - 8) {
-      left = rect.right + GAP;
-      placement = 'right';
+      left = rect.right + GAP; placement = 'right';
     } else {
-      left = rect.left - tb.width - GAP;
-      placement = 'left';
+      left = rect.left - tb.width - GAP; placement = 'left';
     }
     let top = rect.top + (rect.height - tb.height) / 2;
     top = Math.max(8, Math.min(window.innerHeight - tb.height - 8, top));
     floatToolbar.style.top = top + 'px';
     floatToolbar.style.left = left + 'px';
-    floatToolbar.classList.toggle('right', placement === 'right');
-    floatToolbar.classList.toggle('left', placement === 'left');
+    floatToolbar.classList.add(placement);
   }
   function showFloatToolbar(el) {
     floatToolbar.classList.remove('hidden');
