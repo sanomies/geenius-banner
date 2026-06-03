@@ -331,6 +331,15 @@
   }
   .template .headline .text-highlight { color: #3fdd88; }
   /* hover/focus visuals only on the active editable instance */
+  .template-host.active .template .headline p[contenteditable="true"] {
+    cursor: grab;
+  }
+  .template-host.active .template .headline p[contenteditable="true"]:focus {
+    cursor: text;
+  }
+  .template-host.active .template .headline p[contenteditable="true"].dragging {
+    cursor: grabbing;
+  }
   .template-host.active .template .headline p[contenteditable="true"]:hover {
     outline: 2px dashed rgba(87,103,255,0.5); outline-offset: 4px;
   }
@@ -374,9 +383,16 @@
   .tmpl-1080 .plus-pattern { left: 547px; top: 1581px; width: 453.25px; height: 259px; }
   /* When the underlying image is dark, the .invert class flips the color to white
      (the SVG paths use fill="currentColor", driven by .plus-pattern's color). */
-  .tmpl-1080 .content-flex {
+  .tmpl-1080 .content-logo {
     position: absolute;
     left: 100px; top: 180px;
+    width: 880px;
+    display: flex; justify-content: center;
+    z-index: 3; pointer-events: none;
+  }
+  .tmpl-1080 .content-flex {
+    position: absolute;
+    left: 100px; top: 360px;
     width: 880px;
     display: flex; flex-direction: column; gap: 90px; align-items: center;
     z-index: 3; pointer-events: none;
@@ -403,16 +419,20 @@
     left: 50%; top: 110px; width: 385px; height: 90px;
     transform: translateX(-50%);
   }
-  .tmpl-1200 .headline {
-    left: 50%; top: 410px; width: 1100px;
-    transform: translateX(-50%);
+  .tmpl-1200 .content-flex {
+    position: absolute;
+    left: 50px; top: 410px;
+    width: 1100px;
+    display: flex; flex-direction: column; gap: 60px; align-items: center;
+    z-index: 3; pointer-events: none;
   }
+  .tmpl-1200 .headline { width: 100%; }
   .tmpl-1200 .headline p {
     font-size: 105px;
     text-shadow: 0px 0px 40px black, 0px 0px 30px black;
   }
   .tmpl-1200 .cta {
-    left: 425px; top: 826.32px; width: 350px;
+    width: 350px;
     display: flex; flex-direction: column; gap: 8.355px; align-items: center;
     pointer-events: none;
   }
@@ -651,8 +671,10 @@
               <path d="M424.922 125.453H453.25V133.547H424.922V161.875H416.828V133.547H388.5V125.453H416.828V97.125H424.922V125.453Z"/>
             </svg>
           </div>
-          <div class="content-flex">
+          <div class="content-logo">
             <div class="logo"><img src="assets/logo-geenius.svg" alt="Geenius"></div>
+          </div>
+          <div class="content-flex">
             <div class="headline">
               <p data-text="headline" spellcheck="false">Automaks kukkus läbi. Lahendus on veel kõrgem maks?</p>
             </div>
@@ -686,19 +708,21 @@
             </svg>
           </div>
           <div class="layer logo"><img src="assets/logo-geenius.svg" alt="Geenius"></div>
-          <div class="layer headline">
-            <p data-text="headline" spellcheck="false">Automaks kukkus läbi. Lahendus on veel kõrgem maks?</p>
-          </div>
-          <div class="layer cta">
-            <div class="cta-arrow">
-              <svg class="arrow-icon" viewBox="0 0 100 55.3333" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-                <g transform="translate(100 0) rotate(90)">
-                  <path d="M55.3333 44.6667H44.6667V55.3333H55.3333V100H44.6667V62.876L18.416 89.1266L10.8734 81.584L37.124 55.3333H0L0 44.6667H37.124L10.8734 18.416L18.4157 10.8734L44.6667 37.124V0L55.3333 0V44.6667Z" fill="#5767FF"/>
-                  <rect x="44.67" y="44.67" width="10.667" height="10.667" fill="#FFFFFF"/>
-                </g>
-              </svg>
+          <div class="content-flex">
+            <div class="headline">
+              <p data-text="headline" spellcheck="false">Automaks kukkus läbi. Lahendus on veel kõrgem maks?</p>
             </div>
-            <div class="cta-text">Loe Geeniusest</div>
+            <div class="cta">
+              <div class="cta-arrow">
+                <svg class="arrow-icon" viewBox="0 0 100 55.3333" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                  <g transform="translate(100 0) rotate(90)">
+                    <path d="M55.3333 44.6667H44.6667V55.3333H55.3333V100H44.6667V62.876L18.416 89.1266L10.8734 81.584L37.124 55.3333H0L0 44.6667H37.124L10.8734 18.416L18.4157 10.8734L44.6667 37.124V0L55.3333 0V44.6667Z" fill="#5767FF"/>
+                    <rect x="44.67" y="44.67" width="10.667" height="10.667" fill="#FFFFFF"/>
+                  </g>
+                </svg>
+              </div>
+              <div class="cta-text">Loe Geeniusest</div>
+            </div>
           </div>
         </div>
       </div>
@@ -778,6 +802,10 @@
       '1080': null,
       '1200': null,
     },
+    contentOffsetY: {
+      '1080': 0,
+      '1200': 0,
+    },
     imageSelected: false,
   };
   let focusedText = null;
@@ -800,6 +828,10 @@
         '1080': state.imageTransforms['1080'] ? { ...state.imageTransforms['1080'] } : null,
         '1200': state.imageTransforms['1200'] ? { ...state.imageTransforms['1200'] } : null,
       },
+      contentOffsetY: {
+        '1080': state.contentOffsetY['1080'],
+        '1200': state.contentOffsetY['1200'],
+      },
       image: {
         url: state.image.url,
         naturalW: state.image.naturalW,
@@ -817,6 +849,8 @@
     state.styles.headline = { ...snap.styles.headline };
     state.imageTransforms['1080'] = snap.imageTransforms['1080'] ? { ...snap.imageTransforms['1080'] } : null;
     state.imageTransforms['1200'] = snap.imageTransforms['1200'] ? { ...snap.imageTransforms['1200'] } : null;
+    state.contentOffsetY['1080'] = snap.contentOffsetY ? snap.contentOffsetY['1080'] : 0;
+    state.contentOffsetY['1200'] = snap.contentOffsetY ? snap.contentOffsetY['1200'] : 0;
     state.image.url = snap.image.url;
     state.image.naturalW = snap.image.naturalW;
     state.image.naturalH = snap.image.naturalH;
@@ -827,6 +861,7 @@
     applyImageSrc();
     for (const k of Object.keys(TEMPLATES)) {
       if (state.imageTransforms[k]) applyImageTransform(k);
+      applyContentOffset(k);
     }
     updatePlusPatternColor();
     refreshTextToolbar();
@@ -984,6 +1019,32 @@
         `translate(${t.x}px, ${t.y}px) scale(${t.w / state.image.naturalW}, ${t.h / state.image.naturalH})`;
     }
   }
+  // ════════════════════════ Vertical text-box offset ════════════════════════
+  // Initial top of .content-flex per template (canvas px) — used for clamping
+  const CONTENT_TOP = { '1080': 360, '1200': 410 };
+  // Bottom edge of the plus pattern — the text box bottom can't go past this
+  const PLUS_BOTTOM = { '1080': 1840, '1200': 1139.875 };
+
+  function clampContentOffsetY(key, val) {
+    const top = CONTENT_TOP[key];
+    const hostEl = hosts[key].querySelector('.content-flex');
+    const contentH = hostEl ? hostEl.offsetHeight : 0;
+    const min = -top + 20;
+    const max = PLUS_BOTTOM[key] - top - contentH;
+    if (!Number.isFinite(val)) return 0;
+    return Math.max(min, Math.min(max, val));
+  }
+
+  function applyContentOffset(key) {
+    const offset = state.contentOffsetY[key] || 0;
+    const hostEl = hosts[key].querySelector('.content-flex');
+    const thumbEl = thumbs[key] && thumbs[key].querySelector('.content-flex');
+    for (const el of [hostEl, thumbEl]) {
+      if (!el) continue;
+      el.style.transform = offset ? `translateY(${offset}px)` : '';
+    }
+  }
+
   function fitCover(key) {
     if (!state.image.naturalW || !state.image.naturalH) return;
     const cfg = TEMPLATES[key];
@@ -1028,16 +1089,20 @@
     fileInput.value = '';
   }
 
-  // ════════════════════════ Plus-pattern adaptive color (1080 only) ════════════════════════
-  // Samples the image region behind the bottom-right plus pattern. If the average
+  // ════════════════════════ Plus-pattern adaptive color ════════════════════════
+  // Samples the image region behind each template's plus pattern. If the average
   // luminance is dark, we flip the pattern color from black → white (CSS invert).
+  const PLUS_AREAS = {
+    '1080': { x: 547, y: 1581, w: 453.25, h: 259 },
+    '1200': { x: 881, y: 978,  w: 258.999, h: 161.875 },
+  };
   const _sampleCanvas = document.createElement('canvas');
   const _sampleCtx = _sampleCanvas.getContext('2d', { willReadFrequently: true });
 
-  function plusAreaLuminance1080() {
-    const t = state.imageTransforms['1080'];
+  function plusAreaLuminance(key) {
+    const t = state.imageTransforms[key];
     if (!state.image.imgEl || !t) return 0; // no image → template black bg → dark
-    const PX = 547, PY = 1581, PW = 453.25, PH = 259;
+    const { x: PX, y: PY, w: PW, h: PH } = PLUS_AREAS[key];
     const naturalW = state.image.naturalW;
     const naturalH = state.image.naturalH;
     // Image-source region under the plus area
@@ -1075,13 +1140,16 @@
     return (avgImage * covered + 0 * (fullArea - covered)) / fullArea;
   }
 
-  function updatePlusPatternColor() {
-    const lum = plusAreaLuminance1080();
-    const dark = lum < 128;
-    const main = hosts['1080'].querySelector('.plus-pattern');
-    const thumb = thumbs['1080'].querySelector('.plus-pattern');
-    for (const el of [main, thumb]) {
-      if (el) el.classList.toggle('invert', dark);
+  function updatePlusPatternColor(key) {
+    const keys = key ? [key] : Object.keys(TEMPLATES);
+    for (const k of keys) {
+      const lum = plusAreaLuminance(k);
+      const dark = lum < 128;
+      const main = hosts[k].querySelector('.plus-pattern');
+      const thumb = thumbs[k].querySelector('.plus-pattern');
+      for (const el of [main, thumb]) {
+        if (el) el.classList.toggle('invert', dark);
+      }
     }
   }
 
@@ -1220,7 +1288,7 @@
     }
     applyImageTransform(state.activeTemplate);
     updateImageChrome();
-    if (state.activeTemplate === '1080') updatePlusPatternColor();
+    updatePlusPatternColor(state.activeTemplate);
   });
 
   window.addEventListener('pointerup', () => {
@@ -1355,7 +1423,7 @@
     pushUndo();
     fitCover(state.activeTemplate);
     applyImageTransform(state.activeTemplate);
-    if (state.activeTemplate === '1080') updatePlusPatternColor();
+    updatePlusPatternColor(state.activeTemplate);
     selectImage();
   });
   removeImageBtn.addEventListener('click', removeImage);
@@ -1498,6 +1566,79 @@
     }
   }
   bindTextEditing();
+
+  // ════════════════════════ Text-box vertical drag ════════════════════════
+  // Click+drag on the headline moves the text box (headline + CTA) up/down.
+  // Click without drag focuses the text for editing.
+  let textDragState = null;
+  const TEXT_DRAG_THRESHOLD = 5;
+
+  function bindTextDrag() {
+    for (const key of Object.keys(TEMPLATES)) {
+      const el = hosts[key].querySelector('.headline [data-text="headline"]');
+      if (!el) continue;
+      el.addEventListener('pointerdown', (e) => {
+        if (state.activeTemplate !== key) return;
+        if (e.button !== 0) return;
+        // While the element is already focused, let native text editing work
+        if (document.activeElement === el) return;
+        e.preventDefault();
+        textDragState = {
+          startX: e.clientX,
+          startY: e.clientY,
+          pointerId: e.pointerId,
+          el,
+          key,
+          initialOffset: state.contentOffsetY[key] || 0,
+          moved: false,
+        };
+        try { el.setPointerCapture(e.pointerId); } catch {}
+      });
+    }
+  }
+
+  window.addEventListener('pointermove', (e) => {
+    if (!textDragState || textDragState.pointerId !== e.pointerId) return;
+    const dx = e.clientX - textDragState.startX;
+    const dy = e.clientY - textDragState.startY;
+    if (!textDragState.moved && (Math.abs(dx) > TEXT_DRAG_THRESHOLD || Math.abs(dy) > TEXT_DRAG_THRESHOLD)) {
+      textDragState.moved = true;
+      pushUndo();
+      textDragState.el.classList.add('dragging');
+      deselectImage();
+    }
+    if (textDragState.moved) {
+      const next = clampContentOffsetY(textDragState.key, textDragState.initialOffset + dy / scale);
+      state.contentOffsetY[textDragState.key] = next;
+      applyContentOffset(textDragState.key);
+    }
+  });
+
+  window.addEventListener('pointerup', (e) => {
+    if (!textDragState || textDragState.pointerId !== e.pointerId) return;
+    const wasDrag = textDragState.moved;
+    const el = textDragState.el;
+    const clickX = textDragState.startX;
+    const clickY = textDragState.startY;
+    try { el.releasePointerCapture(e.pointerId); } catch {}
+    el.classList.remove('dragging');
+    textDragState = null;
+
+    // No drag → treat as click: focus for editing, place caret at click point
+    if (!wasDrag) {
+      el.focus();
+      const caret = document.caretRangeFromPoint
+        ? document.caretRangeFromPoint(clickX, clickY)
+        : null;
+      if (caret) {
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(caret);
+      }
+    }
+  });
+
+  bindTextDrag();
 
   function setActiveContentEditable() {
     for (const key of Object.keys(TEMPLATES)) {
@@ -1705,7 +1846,7 @@
     t.y += dy;
     applyImageTransform(state.activeTemplate);
     updateImageChrome();
-    if (state.activeTemplate === '1080') updatePlusPatternColor();
+    updatePlusPatternColor(state.activeTemplate);
   });
 
   // ════════════════════════ Click-outside deselect ════════════════════════
