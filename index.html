@@ -1766,16 +1766,26 @@
 
     try {
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
-      const canvas = await html2canvas(clone, {
+      // Supersample at 2× so SVGs and text rasterize crisply, then downscale
+      // the final canvas to the exact target dimensions.
+      const SUPERSAMPLE = 2;
+      const hires = await html2canvas(clone, {
         width: cfg.w,
         height: cfg.h,
         backgroundColor: '#000',
         useCORS: true,
-        scale: 1,
+        scale: SUPERSAMPLE,
         logging: false,
       });
+      const out = document.createElement('canvas');
+      out.width = cfg.w;
+      out.height = cfg.h;
+      const ctx = out.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(hires, 0, 0, cfg.w, cfg.h);
       await new Promise(resolve => {
-        canvas.toBlob(blob => {
+        out.toBlob(blob => {
           if (!blob) return resolve();
           const a = document.createElement('a');
           const url = URL.createObjectURL(blob);
